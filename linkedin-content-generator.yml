@@ -12,8 +12,10 @@ description: |
   - Google Sheets for theme tracking
 
 labels:
-  project: linkedin-automation
-  owner: guilherme
+  - key: project
+    value: linkedin-automation
+  - key: owner
+    value: guilherme
 
 triggers:
   - id: schedule_9am
