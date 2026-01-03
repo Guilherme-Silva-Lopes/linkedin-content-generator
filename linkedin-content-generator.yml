@@ -1,0 +1,132 @@
+id: linkedin-content-generator
+namespace: company.team
+
+description: |
+  Automated LinkedIn Content Generation Workflow
+  
+  This workflow generates engaging LinkedIn posts about AI, Automation, and Low-Code topics using:
+  - LangChain 1.0 AI agents for content creation
+  - Brave Search API for trending topics research
+  - Google Gemini 2.5 Flash Image for visual content
+  - LinkedIn API for automated posting
+  - Google Sheets for theme tracking
+
+labels:
+  project: linkedin-automation
+  owner: guilherme
+
+triggers:
+  - id: schedule_9am
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 9 * * *"
+    timezone: America/Sao_Paulo
+  
+  - id: schedule_2pm
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 14 * * *"
+    timezone: America/Sao_Paulo
+  
+  - id: schedule_5pm
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 17 * * *"
+    timezone: America/Sao_Paulo
+    disabled: true  # Disabled as per original workflow
+
+tasks:
+  # Step 1: Clone GitHub Repository
+  - id: clone_repo
+    type: io.kestra.plugin.git.Clone
+    url: https://github.com/Guilherme-Silva-Lopes/linkedin-content-generator.git
+    branch: main
+    
+  # Step 2: Setup Python Environment
+  - id: setup_env
+    type: io.kestra.plugin.scripts.python.Commands
+    warningOnStdErr: false
+    runner: PROCESS
+    commands:
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+    env:
+      PYTHONUNBUFFERED: "1"
+  
+  # Step 3: Generate Content with AI Agent
+  - id: generate_content
+    type: io.kestra.plugin.scripts.python.Script
+    warningOnStdErr: false
+    runner: PROCESS
+    script: |
+      import sys
+      sys.path.insert(0, 'scripts')
+      from linkedin_agent import main
+      main()
+    env:
+      PYTHONUNBUFFERED: "1"
+      GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
+      BRAVE_SEARCH_API_KEY: "{{ kv('BRAVE_SEARCH') }}"
+      GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+    outputFiles:
+      - linkedin_post.json
+  
+  # Step 4: Generate Image (May fail due to safety filters)
+  - id: generate_image
+    type: io.kestra.plugin.scripts.python.Script
+    warningOnStdErr: false
+    runner: PROCESS
+    allowFailure: true  # Continue even if image generation fails
+    script: |
+      import sys
+      sys.path.insert(0, 'scripts')
+      from gemini_image_generator import main
+      main()
+    env:
+      PYTHONUNBUFFERED: "1"
+      GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
+    inputFiles:
+      linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
+    outputFiles:
+      - linkedin_post.json
+      - image_result.json
+      - linkedin_image.png
+  
+  # Step 5: Publish to LinkedIn
+  - id: publish_to_linkedin
+    type: io.kestra.plugin.scripts.python.Script
+    warningOnStdErr: false
+    runner: PROCESS
+    script: |
+      import sys
+      sys.path.insert(0, 'scripts')
+      from linkedin_publisher import main
+      main()
+    env:
+      PYTHONUNBUFFERED: "1"
+      LINKEDIN_ACCESS_TOKEN: "{{ kv('LINKEDIN_ACCESS_TOKEN') }}"
+      GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+    inputFiles:
+      # Use image task output if available, otherwise use content task output
+      linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
+    outputFiles:
+      - publish_result.json
+  
+  # Step 6: Log Success
+  - id: log_success
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      ✅ LinkedIn Post Published Successfully!
+      
+      Post Title: {{ read(outputs.generate_content.outputFiles['linkedin_post.json']).title }}
+      Image Generated: {{ outputs.generate_image.outputFiles['linkedin_image.png'] != null }}
+      
+      Execution ID: {{ execution.id }}
+      Execution Time: {{ execution.startDate }}
+
+errors:
+  - id: error_notification
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      ❌ LinkedIn Content Generation Failed
+      
+      Error: {{ error.message }}
+      Task: {{ error.taskId }}
+      Execution ID: {{ execution.id }}
