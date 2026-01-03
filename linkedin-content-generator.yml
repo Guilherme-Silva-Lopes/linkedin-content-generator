@@ -42,8 +42,6 @@ tasks:
   # Step 2: Setup Python Environment
   - id: setup_env
     type: io.kestra.plugin.scripts.python.Commands
-    warningOnStdErr: false
-    runner: PROCESS
     commands:
       - pip install --upgrade pip
       - pip install -r requirements.txt
@@ -53,8 +51,6 @@ tasks:
   # Step 3: Generate Content with AI Agent
   - id: generate_content
     type: io.kestra.plugin.scripts.python.Script
-    warningOnStdErr: false
-    runner: PROCESS
     script: |
       import sys
       sys.path.insert(0, 'scripts')
@@ -71,8 +67,6 @@ tasks:
   # Step 4: Generate Image (May fail due to safety filters)
   - id: generate_image
     type: io.kestra.plugin.scripts.python.Script
-    warningOnStdErr: false
-    runner: PROCESS
     allowFailure: true  # Continue even if image generation fails
     script: |
       import sys
@@ -92,8 +86,6 @@ tasks:
   # Step 5: Publish to LinkedIn
   - id: publish_to_linkedin
     type: io.kestra.plugin.scripts.python.Script
-    warningOnStdErr: false
-    runner: PROCESS
     script: |
       import sys
       sys.path.insert(0, 'scripts')
