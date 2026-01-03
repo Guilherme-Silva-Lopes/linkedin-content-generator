@@ -16,7 +16,7 @@ from googleapiclient.errors import HttpError
 
 # Google Sheets API configuration
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SPREADSHEET_ID = '1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo'
+SPREADSHEET_ID = os.environ.get('LINKEDIN_CONTENT_SPREADSHEET_ID', '1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo')
 SHEET_NAME = 'Sheet1'
 
 

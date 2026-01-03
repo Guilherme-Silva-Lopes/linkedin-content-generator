@@ -81,9 +81,10 @@ kestra kv set GOOGLE_SHEETS_CREDENTIALS '{
 
 ### 4. Google Sheets Setup
 
-1. Create a Google Sheet with ID: `1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo` (or update the ID in `sheets_manager.py`)
+1. Create or use an existing Google Sheet
 2. Add a header row with "TEMA" in cell A1
-3. Share the sheet with your service account email (found in Google Sheets credentials JSON)
+3. Note the Sheet ID from the URL and save it to Kestra KV Store as `LINKEDIN_CONTENT_SPREADSHEETS`
+4. Share the sheet with your service account email (found in Google Sheets credentials JSON)
 
 ### 5. LinkedIn API Setup
 

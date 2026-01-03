@@ -63,6 +63,7 @@ tasks:
       GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
       BRAVE_SEARCH_API_KEY: "{{ kv('BRAVE_SEARCH') }}"
       GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+      LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
     outputFiles:
       - linkedin_post.json
   
@@ -97,6 +98,7 @@ tasks:
       PYTHONUNBUFFERED: "1"
       LINKEDIN_ACCESS_TOKEN: "{{ kv('LINKEDIN_ACCESS_TOKEN') }}"
       GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+      LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
     inputFiles:
       # Use image task output if available, otherwise use content task output
       linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"

@@ -68,7 +68,7 @@ Antes de executar, certifique-se de ter:
 - [ ] **Google API Key** - [Obter aqui](https://aistudio.google.com/app/apikey)
 - [ ] **Brave Search API** - [Obter aqui](https://brave.com/search/api/)
 - [ ] **LinkedIn App** criado com OAuth2 configurado
-- [ ] **Google Sheets ID** correto (default: `1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo`)
+- [ ] **Google Sheets ID** salvo na KV Store key: `LINKEDIN_CONTENT_SPREADSHEETS`
 - [ ] **Service Account** do Google Cloud com permissão no Sheet
 
 ## 🎯 Próxima Execução Agendada

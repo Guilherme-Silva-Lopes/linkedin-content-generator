@@ -72,12 +72,17 @@ Guia passo a passo para configurar todas as credenciais necessárias para o Link
 
 #### Opção A: Usar a Planilha Existente
 
-1. Abra a planilha: [Google Sheets](https://docs.google.com/spreadsheets/d/1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo/edit)
-2. Clique em **"Share"** (Compartilhar) no canto superior direito
-3. Cole o **email da service account** que você copiou
-4. Selecione permissão: **"Editor"**
-5. **DESMARQUE** a opção "Notify people"
-6. Clique em **"Share"**
+1. Abra sua planilha do Google Sheets
+2. Anote o **Sheet ID** da URL:
+   ```
+   https://docs.google.com/spreadsheets/d/[SHEET_ID_AQUI]/edit
+   ```
+3. Clique em **"Share"** (Compartilhar) no canto superior direito
+4. Cole o **email da service account** que você copiou
+5. Selecione permissão: **"Editor"**
+6. **DESMARQUE** a opção "Notify people"
+7. Clique em **"Share"**
+8. **Salve o Sheet ID** - você adicionará na KV Store do Kestra
 
 #### Opção B: Criar Nova Planilha
 
@@ -90,10 +95,7 @@ Guia passo a passo para configurar todas as credenciais necessárias para o Link
    https://docs.google.com/spreadsheets/d/[SHEET_ID_AQUI]/edit
    ```
 6. Compartilhe com a service account (mesmo processo da Opção A)
-7. **Atualize o ID** no arquivo `sheets_manager.py` linha 15:
-   ```python
-   SPREADSHEET_ID = 'SEU_SHEET_ID_AQUI'
-   ```
+7. **Salve o Sheet ID** - você adicionará na KV Store do Kestra
 
 ---
 
@@ -223,7 +225,7 @@ Existem duas formas de obter o token:
 
 ### Passo 3.2: Configurar KV Store
 
-Execute os seguintes comandos no terminal onde o Kestra está instalado:
+Execute os seguintes comandos no terminal do servidor onde o Kestra está instalado:
 
 ```bash
 # 1. Google API Key (Gemini)
@@ -237,11 +239,19 @@ kestra kv set LINKEDIN_ACCESS_TOKEN "seu-linkedin-token-aqui"
 
 # 4. Google Sheets Credentials (cole o JSON minificado)
 kestra kv set GOOGLE_SHEETS_CREDENTIALS 'COLE_O_JSON_MINIFICADO_AQUI'
+
+# 5. Google Sheets Spreadsheet ID
+kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "seu-spreadsheet-id-aqui"
 ```
 
 **Exemplo do comando 4**:
 ```bash
 kestra kv set GOOGLE_SHEETS_CREDENTIALS '{"type":"service_account","project_id":"linkedin-automation","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nXXXXX\n-----END PRIVATE KEY-----\n","client_email":"kestra-linkedin-bot@linkedin-automation.iam.gserviceaccount.com",...}'
+```
+
+**Exemplo do comando 5**:
+```bash
+kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "1g7ZLdPYc8-XyKIexgHhpot8HTtcAv5uQmMXjBK4QUEo"
 ```
 
 ### Passo 3.3: Verificar Configuração
