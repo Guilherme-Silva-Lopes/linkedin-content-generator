@@ -15,7 +15,10 @@ from sheets_manager import add_theme
 
 # LinkedIn API Configuration
 LINKEDIN_API_BASE = "https://api.linkedin.com/v2"
-PERSON_URN = "urn:li:person:J1Ri2Oghfy"
+
+# ⚠️ IMPORTANT: Replace with your LinkedIn Person URN
+# Get your Person URN by following the instructions in CREDENTIALS_SETUP.md
+PERSON_URN = "urn:li:person:YOUR_PERSON_URN_HERE"
 
 
 def get_linkedin_access_token() -> str:

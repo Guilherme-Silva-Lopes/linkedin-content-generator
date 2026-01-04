@@ -1,110 +1,126 @@
-# Quick Start Guide - LinkedIn Content Automation
+# ⚡ Quick Start Guide - LinkedIn Content Automation
 
-Este guia rápido te ajudará a configurar e executar o workflow em poucos minutos.
+Get your automated LinkedIn posting workflow running in 5 minutes!
 
-## ⚡ Setup Rápido (5 minutos)
+## 🚀 Setup Rápido
 
-### 1️⃣ Criar Repositório GitHub
-
-```bash
-# Navegue até o diretório do projeto
-cd "d:/PC essentials/TESTES DE IA/Kestra Langchain Linkeding Content"
-
-# Inicialize o Git
-git init
-git add .
-git commit -m "Initial commit: LinkedIn automation with Kestra + LangChain 1.0"
-
-# Crie um repositório no GitHub e conecte
-git remote add origin https://github.com/SEU_USUARIO/linkedin-content-automation
-git branch -M main
-git push -u origin main
-```
-
-### 2️⃣ Atualizar Workflow com sua URL GitHub
-
-Edite `linkedin-content-generator.yml` linha 39:
-```yaml
-url: https://github.com/SEU_USUARIO/linkedin-content-automation
-```
-
-### 3️⃣ Configurar Credenciais no Kestra
+### 1️⃣ Fork & Configure Repository
 
 ```bash
-# Google Gemini API
-kestra kv set GOOGLE_API_KEY "sua-chave-aqui"
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/linkedin-content-generator.git
+cd linkedin-content-generator
 
-# Brave Search API
-kestra kv set BRAVE_SEARCH "sua-chave-aqui"
-
-# LinkedIn Access Token
-kestra kv set LINKEDIN_ACCESS_TOKEN "seu-token-aqui"
-
-# Google Sheets (copie todo o JSON do service account)
-kestra kv set GOOGLE_SHEETS_CREDENTIALS '{"type":"service_account","project_id":"...","private_key":"..."}'
+# Update workflow URL (line ~39 in linkedin-content-generator.yml)
+# Change to your repository URL
 ```
 
-### 4️⃣ Deploy no Kestra
+### 2️⃣ Configure Kestra KV Store
 
 ```bash
-# Validar sintaxe
+# AI APIs (required)
+kestra kv set GOOGLE_API_KEY "your-gemini-api-key"
+kestra kv set OPENAI_API_KEY "your-openai-api-key"
+
+# Search API (required)
+kestra kv set BRAVE_SEARCH "your-brave-search-api-key"
+
+# LinkedIn (required)
+kestra kv set LINKEDIN_ACCESS_TOKEN "your-linkedin-oauth-token"
+
+# Google Sheets (required - paste entire service account JSON)
+kestra kv set GOOGLE_SHEETS_CREDENTIALS '{"type":"service_account",...}'
+
+# Spreadsheet ID (required - from Google Sheets URL)
+kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "your-spreadsheet-id-here"
+```
+
+### 3️⃣ Configure Person URN
+
+Edit `scripts/linkedin_publisher.py` line ~13:
+```python
+PERSON_URN = "urn:li:person:YOUR_URN_HERE"
+```
+
+See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md) for how to get your Person URN.
+
+### 4️⃣ Deploy to Kestra
+
+```bash
+# Validate workflow syntax
 kestra flow validate linkedin-content-generator.yml
 
-# Fazer upload do workflow
+# Deploy to Kestra
 kestra flow namespace update company.team linkedin-content-generator.yml
 ```
 
-### 5️⃣ Testar Manualmente
+### 5️⃣ Test Manually
 
-1. Acesse o Kestra UI: `http://localhost:8080` (ou sua URL)
-2. Navegue para `company.team` → `linkedin-content-generator`
-3. Clique em **"Execute"**
-4. Acompanhe os logs em tempo real
+1. Open Kestra UI: `http://localhost:8080` (or your Kestra URL)
+2. Navigate to: `company.team` → `linkedin-content-generator`
+3. Click **"Execute"**
+4. Monitor execution logs
 
-## 📋 Checklist de Credenciais
+## ✅ Credential Checklist
 
-Antes de executar, certifique-se de ter:
+Before executing, ensure you have:
 
-- [ ] **Google API Key** - [Obter aqui](https://aistudio.google.com/app/apikey)
-- [ ] **Brave Search API** - [Obter aqui](https://brave.com/search/api/)
-- [ ] **LinkedIn App** criado com OAuth2 configurado
-- [ ] **Google Sheets ID** salvo na KV Store key: `LINKEDIN_CONTENT_SPREADSHEETS`
-- [ ] **Service Account** do Google Cloud com permissão no Sheet
+- [ ] **Google Gemini API Key** - [Get here](https://aistudio.google.com/app/apikey)
+- [ ] **OpenAI API Key** - [Get here](https://platform.openai.com/api-keys)
+- [ ] **Brave Search API** - [Get here](https://brave.com/search/api/)
+- [ ] **LinkedIn OAuth2 App** created and configured
+- [ ] **Google Sheets Service Account** with Editor permission
+- [ ] **Spreadsheet ID** saved to KV Store
+- [ ] **Person URN** updated in `linkedin_publisher.py`
 
-## 🎯 Próxima Execução Agendada
+## 📅 Automatic Schedule
 
-Após o deploy, o workflow executará automaticamente:
-- 🌅 **9:00 AM** (horário de Brasília)
-- 🌞 **2:00 PM** (horário de Brasília)
-- 🌆 **5:00 PM** (desabilitado por padrão - edite o workflow para ativar)
+After deployment, the workflow runs automatically:
+- 🌅 **9:00 AM** (Monday-Friday, Brazil/São Paulo timezone)
+- 🌆 **4:00 PM** (Monday-Friday, Brazil/São Paulo timezone)
 
-## 🐛 Troubleshooting Rápido
+**Posts per month**: ~40 automated posts
 
-**Erro: `GOOGLE_API_KEY not found`**
-→ Execute novamente o comando `kestra kv set GOOGLE_API_KEY "..."`
+## 🐛 Quick Troubleshooting
 
-**Erro: `Failed to clone repository`**
-→ Verifique se o repositório GitHub é público ou adicione credenciais de Git
+**Error: `GOOGLE_API_KEY not found`**
+→ Re-run: `kestra kv set GOOGLE_API_KEY "..."`
 
-**Imagem não gerada (NO_IMAGE)**
-→ Normal! O workflow continua e publica apenas texto
+**Error: `Failed to clone repository`**
+→ Ensure repository is public or add Git credentials to Kestra
 
-**Não publicou no LinkedIn**
-→ Verifique se o `LINKEDIN_ACCESS_TOKEN` ainda é válido (tokens expiram)
+**Image generation failed**
+→ Check `OPENAI_API_KEY` and API quota at platform.openai.com
+→ Workflow continues with text-only post
 
-## 📊 Verificar Resultados
+**LinkedIn publish failed**
+→ Verify `LINKEDIN_ACCESS_TOKEN` hasn't expired
+→ Confirm Person URN matches your LinkedIn profile
 
-1. **LinkedIn**: Acesse seu perfil e veja o post publicado
-2. **Google Sheets**: Abra a planilha e confira o novo tema adicionado
-3. **Kestra Logs**: Revise os outputs de cada task
+## 📊 Verify Results
 
-## 🎉 Pronto!
+1. **LinkedIn**: Check your profile for published post
+2. **Google Sheets**: Verify new theme was added to spreadsheet
+3. **Kestra Logs**: Review execution outputs and artifacts
 
-Seu workflow está configurado! Agora ele irá:
-- ✅ Pesquisar tópicos trending em AI/Automation/Low-Code
-- ✅ Gerar posts engajantes em inglês
-- ✅ Criar imagens personalizadas
-- ✅ Publicar automaticamente no LinkedIn
-- ✅ Rastrear temas para evitar repetição
+## 🎯 Expected Outputs
 
-**Posts por mês**: Até 90 posts automáticos! 🚀
+Each successful execution generates:
+- ✅ Engaging LinkedIn post in English (200-300 words)
+- ✅ Custom image generated by DALL-E 2
+- ✅ Theme saved to Google Sheets to avoid repetition
+
+## 🎉 You're Ready!
+
+Your workflow will now automatically:
+- Research trending topics in AI, Automation, and Low-Code
+- Generate engaging LinkedIn posts with Gemini
+- Create relevant images with DALL-E 2
+- Publish to your LinkedIn profile
+- Track topics to avoid repetition
+
+---
+
+**Need detailed setup?** See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md)
+
+**Need help?** Check [README.md](README.md) for full documentation

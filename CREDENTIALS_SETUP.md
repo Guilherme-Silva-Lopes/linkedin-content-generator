@@ -241,7 +241,8 @@ kestra kv set LINKEDIN_ACCESS_TOKEN "seu-linkedin-token-aqui"
 kestra kv set GOOGLE_SHEETS_CREDENTIALS 'COLE_O_JSON_MINIFICADO_AQUI'
 
 # 5. Google Sheets Spreadsheet ID
-kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "seu-spreadsheet-id-aqui"
+# LinkedIn Content Spreadsheet ID (from Google Sheets URL)
+kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "YOUR_GOOGLE_SHEET_ID_HERE"
 ```
 
 **Exemplo do comando 4**:

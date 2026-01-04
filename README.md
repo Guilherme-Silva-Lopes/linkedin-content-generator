@@ -1,15 +1,15 @@
 # LinkedIn Content Automation - Kestra Workflow
 
-Automated LinkedIn content generation system that creates engaging posts about AI, Automation, and Low-Code topics using AI agents and publishes them automatically.
+🤖 Automated LinkedIn content generation and publishing system powered by AI. Creates engaging posts about AI, Automation, and Low-Code topics with custom images.
 
 ## 🌟 Features
 
-- **AI-Powered Content**: Uses LangChain 1.0 `create_agent` with Google Gemini for intelligent content creation
-- **Web Research**: Leverages Brave Search API to find trending topics
-- **Visual Content**: Generates custom images using Gemini 2.5 Flash Image
+- **AI-Powered Content**: Uses LangChain with Google Gemini 3 Flash for intelligent content creation
+- **Web Research**: Leverages Brave Search API to find trending topics  
+- **Visual Content**: Generates custom images using OpenAI DALL-E 2
 - **Auto Publishing**: Posts directly to LinkedIn via API
 - **Theme Tracking**: Uses Google Sheets to avoid topic repetition
-- **Scheduled Execution**: Runs 3 times per day (9am, 2pm, 5pm - Brazil time)
+- **Scheduled Execution**: Runs twice daily on weekdays (9 AM & 4 PM, Brazil time)
 
 ## 📁 Project Structure
 
@@ -20,201 +20,182 @@ Automated LinkedIn content generation system that creates engaging posts about A
 ├── scripts/
 │   ├── linkedin_agent.py             # Main AI agent for content creation
 │   ├── sheets_manager.py             # Google Sheets integration
-│   ├── gemini_image_generator.py     # Image generation using Gemini
+│   ├── openai_image_generator.py     # DALL-E 2 image generation
 │   └── linkedin_publisher.py         # LinkedIn API publishing
+├── CREDENTIALS_SETUP.md               # Detailed credential setup guide
+├── QUICKSTART.md                      # Quick reference guide
 └── README.md                          # This file
 ```
 
-## 🔧 Setup Instructions
+## 🚀 Quick Start
 
-### 1. Prerequisites
+**See [QUICKSTART.md](QUICKSTART.md) for a fast setup guide!**
+
+For detailed credential configuration, see [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md).
+
+## 🔧 Prerequisites
 
 - Kestra instance running
 - GitHub repository for storing scripts
-- Google Cloud API key (for Gemini)
-- Brave Search API key
-- LinkedIn OAuth2 credentials
-- Google Sheets API credentials (Service Account)
+- **Google Gemini API key** (for content generation)
+- **OpenAI API key** (for image generation)
+- **Brave Search API key** (for research)
+- **LinkedIn OAuth2 credentials** (for publishing)
+- **Google Sheets API credentials** (Service Account)
 
-### 2. GitHub Repository Setup
+## 📝 Setup Overview
 
-1. Create a GitHub repository (e.g., `linkedin-content-automation`)
-2. Push all files from this project to the repository:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/YOUR_USERNAME/linkedin-content-automation
-   git push -u origin main
-   ```
-
-3. Update the `clone_repo` task in `linkedin-content-generator.yml` with your repository URL
-
-### 3. Kestra KV Store Configuration
-
-Add the following keys to Kestra's KV Store:
+### 1. Fork & Clone Repository
 
 ```bash
-# Google Gemini API Key
-kestra kv set GOOGLE_API_KEY "your-google-api-key-here"
-
-# Brave Search API Key
-kestra kv set BRAVE_SEARCH "your-brave-search-api-key-here"
-
-# LinkedIn Access Token (OAuth2)
-kestra kv set LINKEDIN_ACCESS_TOKEN "your-linkedin-access-token-here"
-
-# Google Sheets Credentials (Service Account JSON)
-kestra kv set GOOGLE_SHEETS_CREDENTIALS '{
-  "type": "service_account",
-  "project_id": "your-project",
-  "private_key_id": "...",
-  "private_key": "...",
-  "client_email": "...",
-  "client_id": "...",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "...",
-  "client_x509_cert_url": "..."
-}'
+git clone https://github.com/YOUR_USERNAME/linkedin-content-generator.git
+cd linkedin-content-generator
 ```
 
-### 4. Google Sheets Setup
+### 2. Configure Kestra KV Store
 
-1. Create or use an existing Google Sheet
-2. Add a header row with "TEMA" in cell A1
-3. Note the Sheet ID from the URL and save it to Kestra KV Store as `LINKEDIN_CONTENT_SPREADSHEETS`
-4. Share the sheet with your service account email (found in Google Sheets credentials JSON)
+Store all sensitive credentials securely in Kestra's Key-Value Store:
 
-### 5. LinkedIn API Setup
+```bash
+# AI & Search APIs
+kestra kv set GOOGLE_API_KEY "your-google-gemini-api-key"
+kestra kv set OPENAI_API_KEY "your-openai-api-key"
+kestra kv set BRAVE_SEARCH "your-brave-search-api-key"
 
-1. Create a LinkedIn App at https://www.linkedin.com/developers/apps
-2. Configure OAuth 2.0 with the following scopes:
-   - `w_member_social` (for posting)
-   - `r_liteprofile` (for profile access)
-3. Get your Person URN (update `PERSON_URN` in `linkedin_publisher.py` if needed)
-4. Generate an access token and save it to Kestra KV Store
+# LinkedIn Access
+kestra kv set LINKEDIN_ACCESS_TOKEN "your-linkedin-oauth-token"
 
-### 6. Deploy to Kestra
+# Google Sheets (paste entire service account JSON)
+kestra kv set GOOGLE_SHEETS_CREDENTIALS '{...service account JSON...}'
 
-1. Upload the workflow to Kestra:
-   ```bash
-   kestra flow validate linkedin-content-generator.yml
-   kestra flow namespace update company.team linkedin-content-generator.yml
-   ```
+# Spreadsheet ID (from Google Sheets URL)
+kestra kv set LINKEDIN_CONTENT_SPREADSHEETS "your-spreadsheet-id"
+```
 
-2. Verify the workflow in Kestra UI at: `http://your-kestra-instance/ui/flows/company.team/linkedin-content-generator`
+### 3. Configure LinkedIn Person URN
 
-## 🚀 Usage
+Update `PERSON_URN` in `scripts/linkedin_publisher.py` with your LinkedIn Person URN.
 
-### Manual Execution
+See [CREDENTIALS_SETUP.md](CREDENTIALS_SETUP.md) for how to obtain this.
 
-Run the workflow manually from Kestra UI:
-1. Navigate to the workflow
-2. Click "Execute"
-3. Monitor the execution logs
+### 4. Deploy to Kestra
 
-### Scheduled Execution
-
-The workflow runs automatically:
-- **9:00 AM** (Brazil Time) - Morning post
-- **2:00 PM** (Brazil Time) - Afternoon post
-- **5:00 PM** (Brazil Time) - Evening post (disabled by default)
-
-### Outputs
-
-Each execution generates:
-- `linkedin_post.json` - Contains title, content, and image prompt
-- `linkedin_image.png` - Generated image (if successful)
-- `image_result.json` - Image generation result
-- `publish_result.json` - Publishing confirmation
+```bash
+kestra flow validate linkedin-content-generator.yml
+kestra flow namespace update company.team linkedin-content-generator.yml
+```
 
 ## 🎯 Workflow Steps
 
 1. **Clone Repository** - Pulls latest scripts from GitHub
-2. **Setup Environment** - Installs Python dependencies
-3. **Generate Content** - AI agent researches and creates post
-4. **Generate Image** - Creates visual content (optional, may fail due to safety filters)
-5. **Publish to LinkedIn** - Posts content with or without image
-6. **Update Tracking** - Adds theme to Google Sheets
+2. **Setup Environment** - Installs Python dependencies  
+3. **Generate Content** - AI researches trends and creates post
+4. **Generate Image** - DALL-E 2 creates visual content
+5. **Publish to LinkedIn** - Posts content with image
+6. **Update Tracking** - Saves theme to Google Sheets
 
-## 🔍 Optimization Details
+## ⚙️ How It Works
 
-Compared to the original N8N workflow, this implementation:
+### Content Generation Flow
 
-✅ **Reduces API calls by 60%** - Consolidated 4 AI agents into 1  
-✅ **Eliminates redundant image generation attempts**  
-✅ **Removes unnecessary wait times**  
-✅ **Uses modern LangChain 1.0 `create_agent` API**  
-✅ **Implements proper error handling for image generation**  
-✅ **Stores code in version control (GitHub)**  
+```mermaid
+graph LR
+    A[Brave Search] --> B[Gemini 3 Flash]
+    B --> C[Post Content]
+    C --> D[Image Prompt]
+    D --> E[DALL-E 2]
+    E --> F[LinkedIn Post]
+    F --> G[Google Sheets]
+```
+
+1. **Research**: Brave Search finds trending topics
+2. **Content**: Gemini creates engaging LinkedIn post
+3. **Image**: DALL-E 2 generates relevant visual
+4. **Publish**: LinkedIn API publishes the post
+5. **Track**: Google Sheets logs the topic
+
+## 📅 Schedule
+
+**Default Schedule** (Monday-Friday only):
+- 🌅 **9:00 AM** (Brazil/São Paulo time)
+- 🌆 **4:00 PM** (Brazil/São Paulo time)
+
+Change schedule by editing `cron` expressions in `linkedin-content-generator.yml`.
+
+## 🔍 Optimization Highlights
+
+Compared to the original N8N workflow:
+
+✅ **60% fewer API calls** - Consolidated AI agents  
+✅ **Version controlled** - Scripts stored in GitHub  
+✅ **Graceful failures** - Continues without image if needed  
+✅ **Modern stack** - LangChain 1.0 + latest AI models  
+✅ **Cost efficient** - DALL-E 2 for images
 
 ## 🛠️ Troubleshooting
 
 ### Image Generation Fails
-- This is expected behavior when safety filters are triggered
-- The workflow will continue and publish text-only post
-- Check `image_result.json` for `finish_reason: NO_IMAGE`
+- Verify `OPENAI_API_KEY` is valid
+- Check API quota limits at platform.openai.com
+- Workflow continues with text-only post
+
+### LinkedIn Publishing Fails  
+- Verify access token hasn't expired
+- Check Person URN is correct
+- Review LinkedIn API quota
 
 ### Google Sheets Not Updating
-- Verify service account has edit permissions on the sheet
-- Check `GOOGLE_SHEETS_CREDENTIALS` in KV Store
-- Ensure sheet ID matches in `sheets_manager.py`
-
-### LinkedIn Publishing Fails
-- Verify `LINKEDIN_ACCESS_TOKEN` is valid (tokens expire)
-- Check Person URN matches your LinkedIn profile
-- Review LinkedIn API quota limits
-
-### Content Quality Issues
-- Adjust temperature in `linkedin_agent.py` (default: 0.4)
-- Modify system prompts for different tone/style
-- Increase/decrease content length limits
-
-## 📝 Customization
-
-### Change Posting Schedule
-Edit the `cron` expressions in `linkedin-content-generator.yml`:
-```yaml
-cron: "0 9 * * *"  # 9 AM daily
-```
-
-### Modify Content Style
-Edit the `system_prompt` in `scripts/linkedin_agent.py` to change:
-- Tone (formal vs. casual)
-- Length (word count)
-- Topics focus
-- Language
-
-### Use Different AI Models
-Change the model in `linkedin_agent.py`:
-```python
-model_name = "gemini-2.0-flash-exp"  # or gemini-pro, gpt-4, etc.
-```
+- Verify service account has Editor permissions
+- Check spreadsheet ID is correct
+- Ensure credentials JSON is valid
 
 ## 📊 Monitoring
 
 View execution logs in Kestra UI:
-- **Success Rate**: Check execution history
-- **Content Quality**: Review generated posts in Google Sheets
-- **Image Success Rate**: Monitor `image_result.json` outputs
-- **API Quotas**: Watch for rate limiting errors
+- **Execution History**: Track success rate
+- **Output Files**: Review generated content
+- **Error Logs**: Debug failures
 
-## 🤝 Contributing
+## 🎨 Customization
 
-To improve this workflow:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+### Change Content Style
+
+Edit `scripts/linkedin_agent.py` system prompt to modify:
+- Writing tone (formal vs. casual)
+- Post length
+- Topic focus
+- Language
+
+### Change AI Models
+
+```python
+# In linkedin_agent.py
+model_name = "gemini-3-flash-preview"  # or gemini-pro
+
+# In openai_image_generator.py  
+model = "dall-e-2"  # or dall-e-3 (more expensive)
+```
+
+### Change Schedule
+
+Edit `linkedin-content-generator.yml`:
+```yaml
+triggers:
+  - id: morning_post
+    cron: "0 9 * * 1-5"  # Mon-Fri at 9 AM
+```
 
 ## 📄 License
 
-MIT License - feel free to use and modify for your needs!
+MIT License - Use and modify freely!
 
-## 🆘 Support
+## 🤝 Contributing
 
-For issues or questions:
-- Email: guifaceads@gmail.com
-- WhatsApp: +55 21 97770-9013
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+---
+
+**Made with ❤️ using Kestra, LangChain, Gemini, and DALL-E**
