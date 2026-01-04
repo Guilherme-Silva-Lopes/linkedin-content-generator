@@ -134,7 +134,15 @@ Based on these results, create a compelling LinkedIn post for Guilherme. Choose 
     ]
     
     response = model.invoke(messages)
-    content_text = response.content
+    
+    # Extract content - handle both string and list formats
+    if isinstance(response.content, str):
+        content_text = response.content
+    elif isinstance(response.content, list):
+        # Gemini sometimes returns list of content parts
+        content_text = " ".join([part if isinstance(part, str) else str(part) for part in response.content])
+    else:
+        content_text = str(response.content)
     
     # Parse JSON from response
     try:
