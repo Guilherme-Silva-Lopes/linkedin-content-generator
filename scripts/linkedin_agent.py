@@ -195,9 +195,26 @@ Return ONLY the image prompt description, no JSON."""
     ]
     
     image_response = model.invoke(image_messages)
-    image_prompt = image_response.content.strip()
     
-    print(f"✅ Image prompt generated: {image_prompt[:80]}...")
+    # Extract image prompt - handle both string and list formats  
+    if isinstance(image_response.content, str):
+        image_prompt = image_response.content.strip()
+    elif isinstance(image_response.content, list):
+        # Gemini 3 returns list of dicts with 'text' key
+        parts = []
+        for part in image_response.content:
+            if isinstance(part, dict) and 'text' in part:
+                parts.append(part['text'])
+            elif isinstance(part, str):
+                parts.append(part)
+            else:
+                parts.append(str(part))
+        image_prompt = " ".join(parts).strip()
+    else:
+        image_prompt = str(image_response.content).strip()
+    
+    print(f"✅ Image prompt generated!")
+    print(f"🎨 Prompt: {image_prompt[:80]}...")
     
     return {
         "title": post_data.get("title", ""),
