@@ -58,6 +58,8 @@ tasks:
       - id: generate_content
         type: io.kestra.plugin.scripts.python.Script
         containerImage: python:3.13-slim
+        beforeCommands:
+          - pip install --no-cache-dir -r requirements.txt
         script: |
           import sys
           sys.path.insert(0, 'scripts')
@@ -77,6 +79,8 @@ tasks:
         type: io.kestra.plugin.scripts.python.Script
         containerImage: python:3.13-slim
         allowFailure: true  # Continue even if image generation fails
+        beforeCommands:
+          - pip install --no-cache-dir -r requirements.txt
         inputFiles:
           linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
         script: |
@@ -96,6 +100,8 @@ tasks:
       - id: publish_to_linkedin
         type: io.kestra.plugin.scripts.python.Script
         containerImage: python:3.13-slim
+        beforeCommands:
+          - pip install --no-cache-dir -r requirements.txt
         inputFiles:
           # Use image task output if available, otherwise use content task output
           linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
