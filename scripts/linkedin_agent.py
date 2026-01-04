@@ -139,8 +139,16 @@ Based on these results, create a compelling LinkedIn post for Guilherme. Choose 
     if isinstance(response.content, str):
         content_text = response.content
     elif isinstance(response.content, list):
-        # Gemini sometimes returns list of content parts
-        content_text = " ".join([part if isinstance(part, str) else str(part) for part in response.content])
+        # Gemini 3 returns list of content parts (dicts with 'text' key)
+        parts = []
+        for part in response.content:
+            if isinstance(part, dict) and 'text' in part:
+                parts.append(part['text'])
+            elif isinstance(part, str):
+                parts.append(part)
+            else:
+                parts.append(str(part))
+        content_text = " ".join(parts)
     else:
         content_text = str(response.content)
     
