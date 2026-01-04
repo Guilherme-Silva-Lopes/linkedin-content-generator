@@ -1,7 +1,7 @@
 """
 OpenAI Image Generator
 
-Generates images from text prompts using OpenAI's gpt-image-1.5 model.
+Generates images from text prompts using OpenAI's DALL-E 2 model.
 """
 
 import os
@@ -14,7 +14,7 @@ from openai import OpenAI
 
 def generate_image(prompt: str) -> Optional[str]:
     """
-    Generate an image using OpenAI gpt-image-1.5.
+    Generate an image using OpenAI DALL-E 2.
     
     Args:
         prompt: Text description of the image to generate
@@ -28,7 +28,7 @@ def generate_image(prompt: str) -> Optional[str]:
         return None
     
     try:
-        print(f"🎨 Generating image with OpenAI gpt-image-1.5...")
+        print(f"🎨 Generating image with OpenAI DALL-E 2...")
         print(f"📝 Prompt: {prompt[:100]}...")
         
         # Initialize client
@@ -36,10 +36,9 @@ def generate_image(prompt: str) -> Optional[str]:
         
         # Generate image
         response = client.images.generate(
-            model="gpt-image-1.5",
+            model="dall-e-2",
             prompt=prompt,
             size="1024x1024",
-            quality="standard",
             n=1,
         )
         
