@@ -198,11 +198,26 @@ def main():
     
     title = post_data.get("title", "")
     content = post_data.get("content", "")
-    image_base64 = post_data.get("image_base64")
     
     if not content:
         print("❌ Error: No content found in linkedin_post.json")
         sys.exit(1)
+    
+    # Check for image file
+    image_file = "linkedin_image.png"
+    image_base64 = None
+    
+    if os.path.exists(image_file):
+        print(f"\n🖼️ Image file detected: {image_file}")
+        try:
+            with open(image_file, "rb") as img_f:
+                image_base64 = base64.b64encode(img_f.read()).decode('utf-8')
+            print(f"✅ Image loaded and encoded ({len(image_base64)} chars)")
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to load image file: {e}")
+            image_base64 = None
+    else:
+        print("\n📝 No image file found, will post text only")
     
     # Get LinkedIn access token
     try:

@@ -99,6 +99,7 @@ tasks:
         inputFiles:
           # Use image task output if available, otherwise use content task output
           linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
+          linkedin_image.png: "{{ outputs.generate_image.outputFiles['linkedin_image.png'] }}"
         script: |
           import sys
           sys.path.insert(0, 'scripts')
