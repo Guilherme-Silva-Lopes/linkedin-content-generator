@@ -18,19 +18,15 @@ labels:
     value: guilherme
 
 triggers:
-  - id: schedule_9am
+  - id: schedule_morning
     type: io.kestra.plugin.core.trigger.Schedule
-    cron: "0 9 * * *"
+    cron: "0 9 * * MON-FRI"
     timezone: America/Sao_Paulo
     
-  - id: schedule_2pm
+  - id: schedule_afternoon
     type: io.kestra.plugin.core.trigger.Schedule
-    cron: "0 14 * * *"
+    cron: "0 16 * * MON-FRI"
     timezone: America/Sao_Paulo
-    
-  - id: schedule_5pm
-    type: io.kestra.plugin.core.trigger.Schedule
-    cron: "0 17 * * *"
     timezone: America/Sao_Paulo
     disabled: true  # Disabled as per original workflow
 
