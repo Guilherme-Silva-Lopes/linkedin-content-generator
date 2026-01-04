@@ -22,12 +22,12 @@ triggers:
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "0 9 * * *"
     timezone: America/Sao_Paulo
-  
+    
   - id: schedule_2pm
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "0 14 * * *"
     timezone: America/Sao_Paulo
-  
+    
   - id: schedule_5pm
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "0 17 * * *"
@@ -35,100 +35,95 @@ triggers:
     disabled: true  # Disabled as per original workflow
 
 tasks:
-  # Step 1: Clone GitHub Repository
-  - id: clone_repo
-    type: io.kestra.plugin.git.Clone
-    url: https://github.com/Guilherme-Silva-Lopes/linkedin-content-generator.git
-    branch: main
-    
-  # Step 2: Setup Python Environment
-  - id: setup_env
-    type: io.kestra.plugin.scripts.python.Commands
-    inputFiles:
-      requirements.txt: "{{ outputs.clone_repo.files['requirements.txt'] }}"
-    commands:
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
-    env:
-      PYTHONUNBUFFERED: "1"
-  
-  # Step 3: Generate Content with AI Agent
-  - id: generate_content
-    type: io.kestra.plugin.scripts.python.Script
-    inputFiles:
-      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
-    script: |
-      import sys
-      sys.path.insert(0, 'scripts')
-      from linkedin_agent import main
-      main()
-    env:
-      PYTHONUNBUFFERED: "1"
-      GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
-      BRAVE_SEARCH_API_KEY: "{{ kv('BRAVE_SEARCH') }}"
-      GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
-      LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
-    outputFiles:
-      - linkedin_post.json
-  
-  # Step 4: Generate Image (May fail due to safety filters)
-  - id: generate_image
-    type: io.kestra.plugin.scripts.python.Script
-    allowFailure: true  # Continue even if image generation fails
-    inputFiles:
-      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
-      linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
-    script: |
-      import sys
-      sys.path.insert(0, 'scripts')
-      from gemini_image_generator import main
-      main()
-    env:
-      PYTHONUNBUFFERED: "1"
-      GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
-    outputFiles:
-      - linkedin_post.json
-      - image_result.json
-      - linkedin_image.png
-  
-  # Step 5: Publish to LinkedIn
-  - id: publish_to_linkedin
-    type: io.kestra.plugin.scripts.python.Script
-    inputFiles:
-      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
-      # Use image task output if available, otherwise use content task output
-      linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
-    script: |
-      import sys
-      sys.path.insert(0, 'scripts')
-      from linkedin_publisher import main
-      main()
-    env:
-      PYTHONUNBUFFERED: "1"
-      LINKEDIN_ACCESS_TOKEN: "{{ kv('LINKEDIN_ACCESS_TOKEN') }}"
-      GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
-      LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
-    outputFiles:
-      - publish_result.json
-  
-  # Step 6: Log Success
-  - id: log_success
-    type: io.kestra.plugin.core.log.Log
-    message: |
-      ✅ LinkedIn Post Published Successfully!
+  - id: working-directory
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    tasks:
+      # Step 1: Clone GitHub Repository
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/Guilherme-Silva-Lopes/linkedin-content-generator.git
+        branch: main
       
-      Post Title: {{ read(outputs.generate_content.outputFiles['linkedin_post.json']).title }}
-      Image Generated: {{ outputs.generate_image.outputFiles['linkedin_image.png'] != null }}
+      # Step 2: Setup Python Environment
+      - id: setup_env
+        type: io.kestra.plugin.scripts.python.Commands
+        containerImage: python:3.13-slim
+        commands:
+          - pip install --upgrade pip
+          - pip install -r requirements.txt
+        env:
+          PYTHONUNBUFFERED: "1"
       
-      Execution ID: {{ execution.id }}
-      Execution Time: {{ execution.startDate }}
+      # Step 3: Generate Content with AI Agent
+      - id: generate_content
+        type: io.kestra.plugin.scripts.python.Script
+        containerImage: python:3.13-slim
+        script: |
+          import sys
+          sys.path.insert(0, 'scripts')
+          from linkedin_agent import main
+          main()
+        env:
+          PYTHONUNBUFFERED: "1"
+          GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
+          BRAVE_SEARCH_API_KEY: "{{ kv('BRAVE_SEARCH') }}"
+          GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+          LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
+        outputFiles:
+          - linkedin_post.json
+      
+      # Step 4: Generate Image (May fail due to safety filters)
+      - id: generate_image
+        type: io.kestra.plugin.scripts.python.Script
+        containerImage: python:3.13-slim
+        allowFailure: true  # Continue even if image generation fails
+        inputFiles:
+          linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
+        script: |
+          import sys
+          sys.path.insert(0, 'scripts')
+          from gemini_image_generator import main
+          main()
+        env:
+          PYTHONUNBUFFERED: "1"
+          GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
+        outputFiles:
+          - linkedin_post.json
+          - image_result.json
+          - linkedin_image.png
+      
+      # Step 5: Publish to LinkedIn
+      - id: publish_to_linkedin
+        type: io.kestra.plugin.scripts.python.Script
+        containerImage: python:3.13-slim
+        inputFiles:
+          # Use image task output if available, otherwise use content task output
+          linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
+        script: |
+          import sys
+          sys.path.insert(0, 'scripts')
+          from linkedin_publisher import main
+          main()
+        env:
+          PYTHONUNBUFFERED: "1"
+          LINKEDIN_ACCESS_TOKEN: "{{ kv('LINKEDIN_ACCESS_TOKEN') }}"
+          GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
+          LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
+        outputFiles:
+          - publish_result.json
+      
+      # Step 6: Log Success
+      - id: log_success
+        type: io.kestra.plugin.core.log.Log
+        message: |
+          ✅ LinkedIn Post Published Successfully!
+          Title: {{ outputs.publish_to_linkedin.vars.title ?? 'N/A' }}
+          Image: {{ outputs.generate_image.outputFiles['linkedin_image.png'] is defined ? 'Yes' : 'No' }}
+          Execution ID: {{ execution.id }}
 
 errors:
   - id: error_notification
     type: io.kestra.plugin.core.log.Log
     message: |
       ❌ LinkedIn Content Generation Failed
-      
-      Error: {{ error.message }}
-      Task: {{ error.taskId }}
       Execution ID: {{ execution.id }}
