@@ -44,8 +44,8 @@ tasks:
   # Step 2: Setup Python Environment
   - id: setup_env
     type: io.kestra.plugin.scripts.python.Commands
-    namespaceFiles:
-      enabled: true
+    inputFiles:
+      requirements.txt: "{{ outputs.clone_repo.files['requirements.txt'] }}"
     commands:
       - pip install --upgrade pip
       - pip install -r requirements.txt
@@ -55,8 +55,8 @@ tasks:
   # Step 3: Generate Content with AI Agent
   - id: generate_content
     type: io.kestra.plugin.scripts.python.Script
-    namespaceFiles:
-      enabled: true
+    inputFiles:
+      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
     script: |
       import sys
       sys.path.insert(0, 'scripts')
@@ -74,9 +74,10 @@ tasks:
   # Step 4: Generate Image (May fail due to safety filters)
   - id: generate_image
     type: io.kestra.plugin.scripts.python.Script
-    namespaceFiles:
-      enabled: true
     allowFailure: true  # Continue even if image generation fails
+    inputFiles:
+      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
+      linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
     script: |
       import sys
       sys.path.insert(0, 'scripts')
@@ -85,8 +86,6 @@ tasks:
     env:
       PYTHONUNBUFFERED: "1"
       GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
-    inputFiles:
-      linkedin_post.json: "{{ outputs.generate_content.outputFiles['linkedin_post.json'] }}"
     outputFiles:
       - linkedin_post.json
       - image_result.json
@@ -95,8 +94,10 @@ tasks:
   # Step 5: Publish to LinkedIn
   - id: publish_to_linkedin
     type: io.kestra.plugin.scripts.python.Script
-    namespaceFiles:
-      enabled: true
+    inputFiles:
+      scripts/: "{{ outputs.clone_repo.files['scripts/**'] }}"
+      # Use image task output if available, otherwise use content task output
+      linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
     script: |
       import sys
       sys.path.insert(0, 'scripts')
@@ -107,9 +108,6 @@ tasks:
       LINKEDIN_ACCESS_TOKEN: "{{ kv('LINKEDIN_ACCESS_TOKEN') }}"
       GOOGLE_SHEETS_CREDENTIALS: "{{ kv('GOOGLE_SHEETS_CREDENTIALS') }}"
       LINKEDIN_CONTENT_SPREADSHEET_ID: "{{ kv('LINKEDIN_CONTENT_SPREADSHEETS') }}"
-    inputFiles:
-      # Use image task output if available, otherwise use content task output
-      linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
     outputFiles:
       - publish_result.json
   
