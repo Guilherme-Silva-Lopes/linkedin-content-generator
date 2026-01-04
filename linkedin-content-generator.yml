@@ -27,8 +27,6 @@ triggers:
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "0 16 * * MON-FRI"
     timezone: America/Sao_Paulo
-    timezone: America/Sao_Paulo
-    disabled: true  # Disabled as per original workflow
 
 tasks:
   - id: working-directory
