@@ -58,7 +58,7 @@ def brave_search(query: str) -> str:
         return json.dumps({"error": str(e), "results": []})
 
 
-def generate_linkedin_content(model_name: str = "gemini-2.0-flash-exp") -> Dict[str, Any]:
+def generate_linkedin_content(model_name: str = "gemini-1.5-flash") -> Dict[str, Any]:
     """
     Generate LinkedIn post content using AI.
     
