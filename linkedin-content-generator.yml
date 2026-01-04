@@ -68,11 +68,10 @@ tasks:
         outputFiles:
           - linkedin_post.json
       
-      # Step 4: Generate Image (May fail due to safety filters)
+      # Step 4: Generate Image (OpenAI DALL-E)
       - id: generate_image
         type: io.kestra.plugin.scripts.python.Script
         containerImage: python:3.13-slim
-        allowFailure: true  # Continue even if image generation fails
         beforeCommands:
           - pip install --no-cache-dir -r requirements.txt
         inputFiles:
@@ -80,15 +79,16 @@ tasks:
         script: |
           import sys
           sys.path.insert(0, 'scripts')
-          from gemini_image_generator import main
+          from openai_image_generator import main
           main()
         env:
           PYTHONUNBUFFERED: "1"
-          GOOGLE_API_KEY: "{{ kv('GOOGLE_API_KEY') }}"
+          OPENAI_API_KEY: "{{ kv('OPENAI_API_KEY') }}"
         outputFiles:
           - linkedin_post.json
           - image_result.json
           - linkedin_image.png
+        allowFailure: true # Continue if image generation fails
       
       # Step 5: Publish to LinkedIn
       - id: publish_to_linkedin
