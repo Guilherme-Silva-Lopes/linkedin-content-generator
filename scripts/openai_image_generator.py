@@ -1,20 +1,20 @@
 """
-Gemini Image Generator using official Google GenAI SDK
+OpenAI Image Generator
 
-Generates images from text prompts using Google's Gemini 2.5 Flash Image model.
+Generates images from text prompts using OpenAI's DALL-E 3 model.
 """
 
 import os
 import json
 import sys
+import requests
 from typing import Optional
-from google import genai
-from google.genai import types
+from openai import OpenAI
 
 
 def generate_image(prompt: str) -> Optional[str]:
     """
-    Generate an image using Gemini 2.5 Flash Image.
+    Generate an image using OpenAI DALL-E 3.
     
     Args:
         prompt: Text description of the image to generate
@@ -22,45 +22,49 @@ def generate_image(prompt: str) -> Optional[str]:
     Returns:
         Path to saved image file or None if generation failed
     """
-    api_key = os.environ.get("GOOGLE_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("❌ Error: GOOGLE_API_KEY not found in environment variables")
+        print("❌ Error: OPENAI_API_KEY not found in environment variables")
         return None
     
     try:
-        print(f"🎨 Generating image with Gemini 2.5 Flash Image...")
+        print(f"🎨 Generating image with OpenAI DALL-E 3...")
         print(f"📝 Prompt: {prompt[:100]}...")
         
         # Initialize client
-        client = genai.Client(api_key=api_key)
+        client = OpenAI(api_key=api_key)
         
         # Generate image
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt],
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            size="1024x1024",
+            quality="standard",
+            n=1,
         )
         
-        # Save generated image
-        image_saved = False
-        output_path = "linkedin_image.png"
+        # Extract image URL
+        image_url = response.data[0].url
         
-        for part in response.parts:
-            if part.text is not None:
-                print(f"📄 Model response: {part.text}")
-            elif part.inline_data is not None:
-                # Convert to PIL Image and save
-                image = part.as_image()
-                image.save(output_path)
-                print(f"✅ Image generated successfully!")
-                print(f"💾 Image saved to {output_path}")
-                image_saved = True
-                break
-        
-        if not image_saved:
-            print("⚠️ Warning: No image data found in response")
+        if not image_url:
+            print("⚠️ Warning: No image URL found in response")
             return None
             
-        return output_path
+        # Download and save image
+        print(f"⬇️ Downloading image from {image_url[:50]}...")
+        img_response = requests.get(image_url)
+        
+        output_path = "linkedin_image.png"
+        
+        if img_response.status_code == 200:
+            with open(output_path, "wb") as f:
+                f.write(img_response.content)
+            print(f"✅ Image generated and downloaded successfully!")
+            print(f"💾 Image saved to {output_path}")
+            return output_path
+        else:
+            print(f"❌ Error downloading image: {img_response.status_code}")
+            return None
             
     except Exception as e:
         print(f"❌ Error generating image: {e}")
