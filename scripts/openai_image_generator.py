@@ -120,6 +120,13 @@ def main():
         with open(input_file, "w", encoding="utf-8") as f:
             json.dump(post_data, f, indent=2, ensure_ascii=False)
         
+        # Create empty placeholder file so Kestra workflow doesn't fail
+        # Publisher will check if actual image data exists
+        placeholder_path = "linkedin_image.png"
+        with open(placeholder_path, "w") as f:
+            f.write("")  # Empty file as placeholder
+        print(f"📝 Created placeholder file: {placeholder_path}")
+        
         output = {
             "success": False,
             "image_path": None,

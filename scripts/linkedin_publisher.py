@@ -211,14 +211,19 @@ def main():
     image_base64 = None
     
     if os.path.exists(image_file):
-        print(f"\n🖼️ Image file detected: {image_file}")
-        try:
-            with open(image_file, "rb") as img_f:
-                image_base64 = base64.b64encode(img_f.read()).decode('utf-8')
-            print(f"✅ Image loaded and encoded ({len(image_base64)} chars)")
-        except Exception as e:
-            print(f"⚠️ Warning: Failed to load image file: {e}")
-            image_base64 = None
+        # Check if file has content (not a placeholder)
+        file_size = os.path.getsize(image_file)
+        if file_size > 0:
+            print(f"\n🖼️ Image file detected: {image_file} ({file_size} bytes)")
+            try:
+                with open(image_file, "rb") as img_f:
+                    image_base64 = base64.b64encode(img_f.read()).decode('utf-8')
+                print(f"✅ Image loaded and encoded ({len(image_base64)} chars)")
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to load image file: {e}")
+                image_base64 = None
+        else:
+            print(f"\n📝 Image file is empty (placeholder), will post text only")
     else:
         print("\n📝 No image file found, will post text only")
     

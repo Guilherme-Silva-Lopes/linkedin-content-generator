@@ -97,10 +97,8 @@ tasks:
         beforeCommands:
           - pip install --no-cache-dir -r requirements.txt
         inputFiles:
-          # Use image task output if available, otherwise use content task output
           linkedin_post.json: "{{ outputs.generate_image.outputFiles['linkedin_post.json'] ?? outputs.generate_content.outputFiles['linkedin_post.json'] }}"
-          # Note: linkedin_image.png is NOT in inputFiles - publisher will check if it exists in workingDir
-        workingDir: "{{ outputs.clone_repo.outputFiles }}"
+          linkedin_image.png: "{{ outputs.generate_image.outputFiles['linkedin_image.png'] }}"
         script: |
           import sys
           sys.path.insert(0, 'scripts')
